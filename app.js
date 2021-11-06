@@ -1,7 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const Thing = require('./models/thing');
+
+const stuffRoutes = require('./routes/stuff');
 
 mongoose.connect('mongodb+srv://karlbecker:Computer1@cluster0.csscm.mongodb.net/mydb?retryWrites=true&w=majority',
   { useNewUrlParser: true,
@@ -37,15 +38,6 @@ const app = express();
 //     console.log('Réponse envoyée avec succès')
 // });
 
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    next();
-});
-
-app.use(bodyParser.json());
-
 // app.use('/api/stuff', (req, res, next) => {
 //     const stuff = [
 //       {
@@ -68,65 +60,16 @@ app.use(bodyParser.json());
 //     res.status(200).json(stuff);
 // });
 
-// app.post('/api/stuff', (req, res, next) => {
-//     console.log(req.body);
-//     res.status(201).json({
-//       message: 'Objet créé !'
-//     });
-// });
 
-// Enregistrement des Things dans la base de données
-app.post('/api/stuff', (req, res, next) => {
-    delete req.body._id;
-    const thing = new Thing({
-      ...req.body
-    });
-    console.log(req.body);
-    console.log('Nouvel objet enregistré !');
-    thing.save()
-      .then(() => res.status(201).json({ message: 'Objet enregistré !'}))
-      .catch(error => res.status(400).json({ error }));
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  next();
 });
 
-// Mettez à jour un Thing existant
-app.put('/api/stuff/:id', (req, res, next) => {
-  Thing.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
-    .then(() => {
-      console.log(req.body);
-      console.log('Objet modifié !');
+app.use(bodyParser.json());
 
-      res.status(200).json({ message: 'Objet modifié !'})
-    })
-    .catch(error => res.status(400).json({ error }));
-});
-
-// Suppression d'un Thing
-app.delete('/api/stuff/:id', (req, res, next) => {
-  console.log(req.params);
-  console.log('Objet supprimé !');
-  Thing.deleteOne({ _id: req.params.id })
-    .then(() => res.status(200).json({ message: 'Objet supprimé !'}))
-    .catch(error => res.status(400).json({ error }));
-});
-
-// Récupération d'un Thing spécifique
-app.get('/api/stuff/:id', (req, res, next) => {
-  
-  Thing.findOne({ _id: req.params.id })
-    .then(thing => {
-      console.log(thing);
-      console.log('Objet selectionné !');
-
-      res.status(200).json(thing)
-    })
-    .catch(error => res.status(404).json({ error }));
-});
-
-// Récupération de la liste de Things en vente
-app.use('/api/stuff', (req, res, next) => {
-  Thing.find()
-    .then(things => res.status(200).json(things))
-    .catch(error => res.status(400).json({ error }));
-});
+app.use('/api/stuff', stuffRoutes);
 
 module.exports = app;
